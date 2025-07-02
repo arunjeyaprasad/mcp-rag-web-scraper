@@ -10,7 +10,7 @@ from .config import (
 __all__ = [
     "initialize",
     "get_logger",
-    "get_config", 
+    "get_config",
     "update_config",
     "get_scraper_useragent",
     "is_llm_disabled"

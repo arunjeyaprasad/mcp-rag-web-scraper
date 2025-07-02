@@ -51,7 +51,7 @@ def initialize():
 
     # Setup logging
     log_level = get_log_level()
-    logging.basicConfig(    
+    logging.basicConfig(
         level=log_level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
@@ -97,7 +97,7 @@ def get_logger(name: str) -> logging.Logger:
     """
     if not name:
         raise ValueError("Logger name cannot be empty")
-    
+
     return logging.getLogger(name)
 
 
@@ -130,7 +130,7 @@ def get_scraper_useragent() -> str:
     scraper_config = get_config()[SCRAPE_CONFIGURATION] if hasattr(get_config(), SCRAPE_CONFIGURATION) else {}
     if "user_agent" in scraper_config:
         return scraper_config["user_agent"]
-    
+
     # Fallback to environment variable or default user agent
     return "Mozilla/5.0 (compatible; RAGChatBot/1.0;)"
 
