@@ -1,3 +1,4 @@
+[![Python application](https://github.com/arunjeyaprasad/mcp-rag-web-scraper/actions/workflows/python-app.yml/badge.svg)](https://github.com/arunjeyaprasad/mcp-rag-web-scraper/actions/workflows/python-app.yml)
 # mcp-rag-web-scraper
 
 Customizable web scraper that can be used to build a knowledge base which can be integrated with a RAG system for Search. Supports MCP integration as well for querying
