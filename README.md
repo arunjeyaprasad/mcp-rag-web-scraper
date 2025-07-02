@@ -23,6 +23,7 @@ This repo contains two indepdendent applications
 <ul>
 <li>Python 3.11 or greater</li>
 <li>Docker (<u>Optional</u> If you want to run as a container</li>
+</ul>
 
 ## Running via docker
 ```
