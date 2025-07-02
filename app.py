@@ -251,7 +251,8 @@ def search(request: SearchRequest, response: Response):
             error="Missing search query in the request. Specify using 'query' field",
             code=status.HTTP_400_BAD_REQUEST
         )
-    logger.info(f"Search query received for domain {domain} with query: {query}")
+    logger.info(f"Search query received for domain {domain} \
+                with query: {query}")
 
     domain = extract_domain(domain)
     client = DocumentStore(domain)
@@ -352,7 +353,7 @@ def _check_datastore():
         if response.status_code == 200:
             return True
         return False
-    except Exception as e:
+    except Exception:
         return False
 
 

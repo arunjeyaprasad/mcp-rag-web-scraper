@@ -11,7 +11,7 @@ from storage.document_store import DocumentStore
 
 # Constants
 DEFAULT_USER_AGENT = config.get_scraper_useragent()
-DEFAULT_CRAWL_DELAY = config.get_config()["SCRAPE_CONFIGURATION"].get("crawl_delay", 2)  # Default crawl delay in seconds 
+DEFAULT_CRAWL_DELAY = config.get_config()["SCRAPE_CONFIGURATION"].get("crawl_delay", 2)  # Default crawl delay in seconds
 DEFAULT_MAX_PAGES = config.get_config()["SCRAPE_CONFIGURATION"].get("max_pages", 200)  # Default maximum pages to scrape
 MAX_CONCURRENT_PAGES = config.get_config()["SCRAPE_CONFIGURATION"].get("concurrency", 25)  # Default number of concurrent requests
 
@@ -108,7 +108,7 @@ class WebsiteScraper:
                     # Create tasks for concurrent scraping
                     tasks = [
                         self._scrape_page_with_semaphore(
-                            context, url, 
+                            context, url,
                             max_pages, crawl_delay)
                         for url in batch
                         if url not in self.visited_urls and self._can_fetch(url)
@@ -170,9 +170,9 @@ class WebsiteScraper:
                 # Find and follow allowed links
                 new_links = await self._extract_links(page)
                 self.urls_to_scrape.extend([
-                    link for link in new_links 
-                    if (link not in self.visited_urls and 
-                        link not in self.urls_to_scrape and 
+                    link for link in new_links
+                    if (link not in self.visited_urls and
+                        link not in self.urls_to_scrape and
                         self._can_fetch(link))
                 ])
             except asyncio.exceptions.CancelledError as ce:

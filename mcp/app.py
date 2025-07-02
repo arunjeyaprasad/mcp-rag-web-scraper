@@ -2,9 +2,9 @@
 """
 MCP Server for our RAG Scraper
 
-A Model Context Protocol server built with FastMCP that provides tools for 
-invoking remote HTTP services. 
-This server can be integrated with Claude Desktop or other MCP-compatible clients.
+A Model Context Protocol server built with FastMCP that provides tools for
+invoking remote HTTP services. This server can be integrated with
+Claude Desktop or other MCP-compatible clients.
 This server is designed to work with a remote scraping service, allowing users
 to perform search operations, start and stop scraping tasks, and test the
 connection to the service.
