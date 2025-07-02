@@ -6,50 +6,108 @@ name: Python application
 on:
   push:
     branches: [ "main" ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ "main" ]
 
 permissions:
   contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  # Github Container Registry
+  IMAGE_NAME: mcp-rag-web-scraper
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Set up Python 3.11
       uses: actions/setup-python@v3
       with:
         python-version: "3.11"
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Test with pytest
       run: |
         pytest
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    - name: Build Docker image
-      run: |
-        docker build -t mcp-rag-web-scraper .
+    
+    - name: Login to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
+          type=raw,value=latest,enable={{is_default_branch}}
+      
+    - name: Build and push Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Generate artifact attestation
+      if: github.event_name != 'pull_request'
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-name: ghcr.io/${{ github.repository }}
+        subject-digest: ${{ steps.build.outputs.digest }}
+        push-to-registry: true
+
     - name: Clean up space
       run: |
         df -h
+        pip cache purge
+        rm -rf ~/.cache/pip
+        rm -rf /tmp/pip-*
         docker system prune -af
-    - name: Verify Docker Compose
-      run: |
-          docker compose version
-          docker compose build
-          docker compose up -d
-          docker compose ps
-          docker compose down
+        df -h
+
+    # Commenting as github runner runs out of space
+    # - name: Verify Docker Compose
+    #   run: |
+    #       docker compose version
+    #       docker compose build
+    #       docker compose up -d
+    #       docker compose ps
+    #       docker compose down
