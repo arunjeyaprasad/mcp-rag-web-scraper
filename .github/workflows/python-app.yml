@@ -42,6 +42,10 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t mcp-rag-web-scraper .
+    - name: Clean up space
+      run: |
+        df -h
+        docker system prune -af
     - name: Verify Docker Compose
       run: |
           docker compose version
