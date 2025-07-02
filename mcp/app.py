@@ -2,10 +2,12 @@
 """
 MCP Server for our RAG Scraper
 
-A Model Context Protocol server built with FastMCP that provides tools for invoking 
-remote HTTP services. This server can be integrated with Claude Desktop or other MCP-compatible clients.
-This server is designed to work with a remote scraping service, allowing users to perform search operations,
-start and stop scraping tasks, and test the connection to the service.
+A Model Context Protocol server built with FastMCP that provides tools for 
+invoking remote HTTP services. 
+This server can be integrated with Claude Desktop or other MCP-compatible clients.
+This server is designed to work with a remote scraping service, allowing users
+to perform search operations, start and stop scraping tasks, and test the
+connection to the service.
 """
 import os
 import json
@@ -26,7 +28,7 @@ mcp = FastMCP("MCP Server for RAG Search", version="1.0.0")
 
 # Configuration for allowed hosts (security measure)
 ALLOWED_HOSTS = [
-    
+
 ]
 
 DEFAULT_TIMEOUT_SECONDS = 30.0
@@ -49,6 +51,7 @@ class SearchRequest(BaseModel):
         description="The search query to execute"
     )
 
+
 class ScrapeRequest(BaseModel):
     """
         Model for scrape request parameters.
@@ -60,7 +63,8 @@ class ScrapeRequest(BaseModel):
     schedule_interval_hours: Optional[int] = Field(
         24,
         description="The interval in hours to reschedule the scrape (default: 24 hours)"
-    )    
+    )
+
 
 class ErrorResponse(BaseModel):
     """
@@ -74,6 +78,7 @@ class ErrorResponse(BaseModel):
         None,
         description="Optional error code for more specific error identification"
     )
+
 
 class SuccessResponse(BaseModel):
     """
@@ -92,7 +97,8 @@ def is_url_allowed(url: str) -> bool:
         Args:
             url: The URL to check
         Returns:
-            bool: True if the URL's host is in the allowed list, False otherwise
+            bool: True if the URL's host is in the allowed list,
+                  False otherwise
     """
     try:
         parsed = urlparse(url)
@@ -111,7 +117,7 @@ def format_response(response: httpx.Response) -> Dict[str, Any]:
         json_data = response.json()
     except Exception:
         json_data = None
-    
+
     return {
         "status_code": response.status_code,
         "json": json_data,
@@ -129,12 +135,12 @@ async def search(
 ) -> str:
     """
     Make a GET request to a remote HTTP service.
-    
+
     Args:
         url: The URL to make the GET request to
         query: The search query to include in the request
         timeout: Request timeout in seconds (default: 30)
-    
+
     Returns:
         JSON string containing the response data
     """
@@ -142,13 +148,13 @@ async def search(
         return json.dumps({
             "error": f"URL not allowed. Host must be in: {', '.join(ALLOWED_HOSTS)}"
         })
-    
+
     # Prepare parameters for the GET request
     payload = SearchRequest(
         domain=urlparse(url).netloc,
         query=query
     )
-    
+
     url = f"{SERVICE_URL}/search"
     try:
         async with httpx.AsyncClient() as client:
@@ -157,10 +163,10 @@ async def search(
                 json=payload.model_dump(),
                 timeout=timeout
             )
-            
+
             result = format_response(response)
             return json.dumps(result, indent=2)
-            
+
     except httpx.TimeoutException:
         return json.dumps({"error": "Request timed out"})
     except Exception as e:
@@ -176,12 +182,12 @@ async def start_scrape(
 ) -> str:
     """
     Start the scraping of the given website URL.
-    
+
     Args:
         url: The URL to scrape
         schedule_interval_hours: Interval in hours to reschedule the scrape (default: 24 hours)
         timeout: Request timeout in seconds (default: 30)
-    
+
     Returns:
         JSON string containing the response data
     """
@@ -189,11 +195,11 @@ async def start_scrape(
         return json.dumps({
             "error": f"URL not allowed. Host must be in: {', '.join(ALLOWED_HOSTS)}"
         })
-    
+
     headers = {}
     path = f"{SERVICE_URL}/scrape/start"
     payload = ScrapeRequest(url=url, schedule_interval_hours=schedule_interval_hours)
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -202,10 +208,10 @@ async def start_scrape(
                 json=payload.model_dump(),
                 timeout=timeout
             )
-            
+
             result = format_response(response)
             return json.dumps(result, indent=2)
-            
+
     except httpx.TimeoutException:
         return json.dumps({"error": "Request timed out"})
     except Exception as e:
@@ -220,11 +226,11 @@ async def stop_scrape(
 ) -> str:
     """
     Stop the scraping of the given website URL.
-    
+
     Args:
         url: The URL which was provided to scrape via start_scrape
         timeout: Request timeout in seconds (default: 30)
-    
+
     Returns:
         JSON string containing the response data
     """
@@ -232,7 +238,7 @@ async def stop_scrape(
         return json.dumps({
             "error": f"URL not allowed. Host must be in: {', '.join(ALLOWED_HOSTS)}"
         })
-    
+
     headers = {}
     path = f"{SERVICE_URL}/scrape/stop"
     payload = ScrapeRequest(url=url)
@@ -244,10 +250,10 @@ async def stop_scrape(
                 json=payload.model_dump(),
                 timeout=timeout
             )
-            
+
             result = format_response(response)
             return json.dumps(result, indent=2)
-            
+
     except httpx.TimeoutException:
         return json.dumps({"error": "Request timed out"})
     except Exception as e:
@@ -259,10 +265,10 @@ async def stop_scrape(
 async def get_scrape_status() -> str:
     """
     Get the status of the scraping service.
-    
+
     Args:
         None
-    
+
     Returns:
         JSON string containing the scrape status
     """
@@ -271,14 +277,14 @@ async def get_scrape_status() -> str:
         return json.dumps({
             "error": f"URL not allowed. Host must be in: {', '.join(ALLOWED_HOSTS)}"
         })
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT_SECONDS)
-            
+
             result = format_response(response)
             return json.dumps(result, indent=2)
-            
+
     except Exception as e:
         return json.dumps({
             "error": str(e)
@@ -299,11 +305,11 @@ async def test_connection() -> str:
         return json.dumps({
             "error": f"URL not allowed. Host must be in: {', '.join(ALLOWED_HOSTS)}"
         })
-    
+
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(url, timeout=DEFAULT_TIMEOUT_SECONDS)
-            
+
             result = {
                 "test_passed": 200 <= response.status_code < 300,
                 "status_code": response.status_code,
@@ -311,7 +317,7 @@ async def test_connection() -> str:
                 "url": str(response.url)
             }
             return json.dumps(result, indent=2)
-            
+
     except Exception as e:
         return json.dumps({
             "test_passed": False,

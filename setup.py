@@ -3,7 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name="mcp-rag-web-scraper",
     version="1.0.0",
-    description="A web scraper for RAG (Retrieval-Augmented Generation) using MCP",
+    description="A Web scraper for RAG (Retrieval-Augmented Generation) with \
+        MCP support",
     author="A J Arun Jeya Prasad",
     packages=find_packages(),
     install_requires=[

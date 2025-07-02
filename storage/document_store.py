@@ -7,7 +7,7 @@ from qdrant_client.http.models import SearchParams
 from config import config
 from typing import List, Dict
 import logging
-import os
+
 
 class DocumentStore:
     def __init__(self, collection_name: str = "default_collection"):
@@ -18,20 +18,19 @@ class DocumentStore:
             chunk_overlap=200,
             length_function=len,
         )
-        
+
         self.vector_config = config.get_config().get(config.VECTOR_DB_CONFIGURATION)
         # Initialize Qdrant client
         self.client = QdrantClient(
             host=self.vector_config.get("host", "localhost"),
             port=self.vector_config.get("port", 6333)
         )
-        
+
         # Setup logging
         self.logger = logging.getLogger(__name__)
-        
+
         # Ensure collection exists
         self._create_collection_if_not_exists()
-    
 
     def _create_collection_if_not_exists(self):
         """
@@ -48,7 +47,6 @@ class DocumentStore:
                 )
             )
         self.logger.info(f"Created collection: {self.collection_name}")
-
 
     def store_documents(self, documents: List[Dict]):
         """
@@ -73,14 +71,13 @@ class DocumentStore:
                         **doc.get("metadata", {})
                     }
                 )
-                
+
                 # Split document into chunks
                 doc_chunks = self.text_splitter.split_documents([langchain_doc])
-                
+
                 # Create embeddings and store in Qdrant
                 for chunk in doc_chunks:
                     embedding = self.embeddings.embed_query(chunk.page_content)
-                    
                     self.client.upsert(
                         collection_name=self.collection_name,
                         points=models.Batch(
@@ -92,12 +89,9 @@ class DocumentStore:
                             }]
                         )
                     )
-                
                 self.logger.debug(f"Stored document: {doc['url']}")
-                
             except Exception as e:
                 self.logger.error(f"Error storing document: {str(e)} {doc.get('url', 'unknown')}")
-
 
     def search_documents(self, query: str, top_k: int = 5, similarity_threshold: float = None) -> List[Dict[str, any]]:
         """
@@ -105,13 +99,15 @@ class DocumentStore:
             Args:
                 query (str): The search query
                 top_k (int): Number of top results to return
-                similarity_threshold (float): Minimum similarity score to filter results
+                similarity_threshold (float):
+                    Minimum similarity score to filter results
         """
         if not query:
             self.logger.warning("Empty query provided for search.")
             return []
         if top_k <= 0:
-            self.logger.warning("Invalid top_k value provided for search, defaulting to 5.")
+            self.logger.warning("Invalid top_k value provided for search, \
+                                defaulting to 5.")
             top_k = 5
         try:
             embedding = self.embeddings.embed_query(query)
@@ -124,7 +120,7 @@ class DocumentStore:
                 ),
                 score_threshold=similarity_threshold if similarity_threshold else 0.0
             )
-            
+
             return [
                 {
                     "text": result.payload["text"],
@@ -132,11 +128,10 @@ class DocumentStore:
                     "score": result.score
                 } for result in results
             ]
-        
+
         except Exception as e:
             self.logger.error(f"Error searching documents: {str(e)}")
             return []
-
 
     def close(self):
         """Close the Qdrant client connection"""

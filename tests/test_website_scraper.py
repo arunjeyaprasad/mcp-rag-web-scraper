@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from playwright.async_api import Page
 import config
@@ -60,12 +59,12 @@ async def test_init():
 @pytest.mark.asyncio
 async def test_can_fetch():
     with patch('scrapers.website_scraper.RobotFileParser') as mock_parser, \
-        patch('scrapers.website_scraper.DocumentStore') as doc_store:
-            doc_store.return_value = mock_document_store
-            mock_parser.return_value.can_fetch.return_value = True
-            scraper = WebsiteScraper("https://example.com")
-            assert scraper._can_fetch("https://example.com/page") is True
-            doc_store.assert_called_once()
+      patch('scrapers.website_scraper.DocumentStore') as doc_store:
+        doc_store.return_value = mock_document_store
+        mock_parser.return_value.can_fetch.return_value = True
+        scraper = WebsiteScraper("https://example.com")
+        assert scraper._can_fetch("https://example.com/page") is True
+        doc_store.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -105,7 +104,7 @@ async def test_extract_links(mock_page):
         mock_element.get_attribute.return_value = "https://example.com/page"
         mock_page.query_selector_all.return_value = [mock_element]
         links = await scraper._extract_links(mock_page)
-        
+
         assert links == ["https://example.com/page"]
         doc_store.assert_called_once()
 
@@ -117,7 +116,7 @@ async def test_progress():
         scraper = WebsiteScraper("https://example.com")
         scraper.visited_urls.add("https://example.com/page1")
         scraper.urls_to_scrape.append("https://example.com/page2")
-        
+
         progress = scraper.progress()
         assert progress["visited_urls"] == 1
         assert progress["remaining_urls"] == 1
@@ -134,7 +133,7 @@ async def test_stop():
         scraper.visited_urls.add("https://example.com/page")
         scraper.urls_to_scrape.append("https://example.com/page2")
         scraper.stop()
-        
+
         assert len(scraper.visited_urls) == 0
         assert len(scraper.urls_to_scrape) == 0
         doc_store.assert_called_once()

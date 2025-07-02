@@ -15,6 +15,7 @@ DEFAULT_CRAWL_DELAY = config.get_config()["SCRAPE_CONFIGURATION"].get("crawl_del
 DEFAULT_MAX_PAGES = config.get_config()["SCRAPE_CONFIGURATION"].get("max_pages", 200)  # Default maximum pages to scrape
 MAX_CONCURRENT_PAGES = config.get_config()["SCRAPE_CONFIGURATION"].get("concurrency", 25)  # Default number of concurrent requests
 
+
 class WebsiteScraper:
     def __init__(self, base_url: str, user_agent: str = DEFAULT_USER_AGENT, collection_name: str = "website_content", override_robots: bool = False):
         self.logger = config.get_logger(__name__)
@@ -47,7 +48,6 @@ class WebsiteScraper:
             self.logger.warning(f"Could not fetch robots.txt: {str(e)}")
         return parser
 
-
     def _can_fetch(self, url: str) -> bool:
         """
             Check if URL is allowed to be scraped. If override_robots is True, always allow scraping.
@@ -64,24 +64,6 @@ class WebsiteScraper:
         except Exception:
             # If robots.txt check fails, assume conservative approach
             return False
-
-
-    # def start_scheduled_scraping(self, interval_hours: int = 24):
-    #     """
-    #         Start scheduled scraping. It will run immediately on start and then at the specified interval.
-    #         This method uses APScheduler to run the scrape_website method at specified intervals.
-    #         Args:
-    #             interval_hours (int): Interval in hours for scraping
-    #     """
-    #     self.scheduler.add_job(
-    #         self.scrape_website,
-    #         'interval',
-    #         hours=interval_hours,
-    #         next_run_time=datetime.now(), # This makes it run immediately
-    #         id=self.scraper_id
-    #     )
-    #     self.logger.info(f"Scheduled scraping started for {self.base_url} every {interval_hours} hours")
-
 
     async def scrape_website(self, max_pages: int = DEFAULT_MAX_PAGES):
         """
@@ -101,9 +83,9 @@ class WebsiteScraper:
                 user_agent=self.user_agent,
                 viewport={'width': 1920, 'height': 1080}
             )
-            
+
             self.logger.info(f"Browser context created with user agent: {self.user_agent}")
-            
+
             try:
                 crawl_delay = self.robots_parser.crawl_delay(self.user_agent)
                 if crawl_delay is None:
@@ -120,7 +102,7 @@ class WebsiteScraper:
                     else:
                         batch = self.urls_to_scrape
                         first_run = False
-                    
+
                     self.logger.info(f"URLs to scrape: {len(self.urls_to_scrape)}, Visited: {len(self.visited_urls)}")
 
                     # Create tasks for concurrent scraping
@@ -131,20 +113,19 @@ class WebsiteScraper:
                         for url in batch
                         if url not in self.visited_urls and self._can_fetch(url)
                     ]
-                    
+
                     self.logger.info(f"Starting batch scrape for {len(tasks)} URLs")
                     # Wait for batch to complete
                     await asyncio.gather(*tasks)
-                
+
             except Exception as e:
                 self.logger.error(f"Error during scraping: {str(e)}")
             finally:
                 await context.close()
                 await browser.close()
 
-
-    async def _scrape_page_with_semaphore(self, context, url: str, max_pages: int, 
-                                         crawl_delay: float):
+    async def _scrape_page_with_semaphore(self, context, url: str,
+                                          max_pages: int, crawl_delay: float):
         """
             Wrapper to handle semaphore for concurrent page scraping
             Args:
@@ -154,16 +135,15 @@ class WebsiteScraper:
                 crawl_delay (float): Delay between requests
         """
         async with self.semaphore:
-            await self._scrape_page(
-                context, url, 
-                max_pages, crawl_delay
-            )
+            await self._scrape_page(context, url, max_pages, crawl_delay)
 
     async def _scrape_page(self, context, url: str,
-                          max_pages: int, crawl_delay: float):
+                           max_pages: int, crawl_delay: float):
         """
-            Scrape a single page. Returns immediately if the URL has already been visited.
-            This method is responsible for navigating to the page, extracting content, and finding new links.
+            Scrape a single page.
+            Returns immediately if the URL has already been visited.
+            This method is responsible for navigating to the page,
+            extracting content, and finding new links.
             Args:
                 context: Playwright browser context
                 url (str): URL to scrape
@@ -176,17 +156,17 @@ class WebsiteScraper:
         try:
             self.logger.info(f"Scraping: {url}")
             page = await context.new_page()
-            
+
             try:
                 response = await page.goto(url, wait_until="networkidle")
                 await asyncio.sleep(crawl_delay)
-                
+
                 self.visited_urls.add(url)
-                
+
                 content = await self._extract_content(response, page)
                 if content:
                     self.document_store.store_documents([content])
-                
+
                 # Find and follow allowed links
                 new_links = await self._extract_links(page)
                 self.urls_to_scrape.extend([
@@ -199,7 +179,7 @@ class WebsiteScraper:
                 self.logger.error(f"Cancelled the scraping for {url}: {ce}")
             finally:
                 await page.close()
-                
+
         except Exception as e:
             self.logger.error(f"Error scraping {url}: {e}")
 
@@ -247,7 +227,6 @@ class WebsiteScraper:
             self.logger.error(f"Error extracting content: {str(e)}")
             return None
 
-
     async def _extract_links(self, page) -> List[str]:
         """
             Extract links from page
@@ -258,7 +237,7 @@ class WebsiteScraper:
         """
         links = []
         elements = await page.query_selector_all("a[href]")
-        
+
         for element in elements:
             href = await element.get_attribute("href")
             if not href:
@@ -271,7 +250,6 @@ class WebsiteScraper:
                 links.append(full_url)
         return links
 
-
     def _generate_content_hash(self, content: str) -> str:
         """
             Generate SHA-256 hash of content for change detection
@@ -281,7 +259,6 @@ class WebsiteScraper:
                 str: SHA-256 hash of the content
         """
         return hashlib.sha256(content.encode('utf-8')).hexdigest()
-    
 
     def stop(self):
         """
@@ -292,7 +269,6 @@ class WebsiteScraper:
         self.visited_urls.clear()
         self.urls_to_scrape.clear()
         self.document_store.close()
-
 
     def progress(self):
         """

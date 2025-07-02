@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 __default__config = dict(
     # Default configuration settings
     logging_level=logging.INFO,  # Default logging level
-    server_port=8090, # Default server port
+    server_port=8090,            # Default server port
     llm_model="gemma3:12b"
 )
 
@@ -38,6 +38,7 @@ __default_llm_config = {
 SCRAPE_CONFIGURATION = "SCRAPE_CONFIGURATION"
 VECTOR_DB_CONFIGURATION = "VECTOR_DB_CONFIGURATION"
 LLM_CONFIGURATION = "LLM_CONFIGURATION"
+
 
 def initialize():
     """

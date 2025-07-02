@@ -2,7 +2,6 @@ from fastapi import FastAPI, BackgroundTasks, Response, status
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 from typing import Optional, Dict, Any, Union
-import asyncio
 import time
 import threading
 import requests
@@ -25,12 +24,15 @@ class ScrapeRequest(BaseModel):
     url: str
     schedule_interval_hours: Optional[int] = None
 
+
 class ScrapeResponse(BaseModel):
     status: str
+
 
 class SearchRequest(BaseModel):
     domain: str
     query: str
+
 
 class ErrorResponse(BaseModel):
     error: str
@@ -39,6 +41,7 @@ class ErrorResponse(BaseModel):
 
 # Initialize scheduler
 scheduler = AsyncIOScheduler()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -57,7 +60,9 @@ async def lifespan(app: FastAPI):
         logger.info("Scheduler stopped")
 
 
-app = FastAPI(title="RAG Supported Scraper API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="RAG Supported Scraper API", version="1.0.0",
+              lifespan=lifespan)
+
 
 def check_domain(url: Optional[str]) -> Optional[str]:
     """
@@ -91,14 +96,18 @@ def extract_domain(domain: str) -> str:
 
 
 @app.post("/scrape/start", response_model=Union[ScrapeResponse, ErrorResponse])
-async def start_scrape(request: ScrapeRequest, response: Response, background_tasks: BackgroundTasks):
+async def start_scrape(request: ScrapeRequest, response: Response,
+                       background_tasks: BackgroundTasks):
     """
     Start scraping the specified website URL.
     Args:
-        request (ScrapeRequest): The request containing the URL and optional schedule interval.
-        background_tasks (BackgroundTasks): Background tasks to run after the response is sent.
+        request (ScrapeRequest): The request containing the URL and
+            optional schedule interval.
+        background_tasks (BackgroundTasks): Background tasks to run after
+            the response is sent.
     Returns:
-        ScrapeResponse: The response indicating the status of the scraping operation.
+        ScrapeResponse:
+            The response indicating the status of the scraping operation.
     """
 
     # Lazy initialisation to let config get initialised
@@ -121,8 +130,8 @@ async def start_scrape(request: ScrapeRequest, response: Response, background_ta
             error=f"Scraper for domain {host} already exists",
             code=status.HTTP_400_BAD_REQUEST
         )
-    
-    scraper = WebsiteScraper(domain, collection_name=host, override_robots=True)
+    scraper = WebsiteScraper(domain, collection_name=host,
+                             override_robots=True)
     background_tasks.add_task(scraper.scrape_website)
     # If schedule interval is provided, start the scraper with a schedule
     if request.schedule_interval_hours:
@@ -150,7 +159,6 @@ def stop_scrape(request: ScrapeRequest, response: Response):
             error="Missing domain in the request. Specify using 'url' field",
             code=status.HTTP_400_BAD_REQUEST
         )
-    
     domain = extract_domain(domain)
     scraper = scrapers.get(domain, None)
     if scraper is None:
@@ -203,6 +211,7 @@ def statusz(response: Response):
         code=status.HTTP_200_OK
     )
 
+
 @app.get("/scrape/status", response_model=Dict[str, Any])
 def scrape_status(response: Response):
     """
@@ -215,16 +224,17 @@ def scrape_status(response: Response):
         scraper_status[domain] = {
             "progress": scraper.progress()
         }
-    
+
     response.status_code = status.HTTP_200_OK
     response.value = scraper_status
-    
+
     return scraper_status
+
 
 @app.get("/search", response_model=Union[ErrorResponse, Dict[str, Any]])
 def search(request: SearchRequest, response: Response):
     domain = request.domain
-    
+
     if domain is None:
         # Bad Request. No search query provided
         response.status_code = status.HTTP_400_BAD_REQUEST
@@ -260,10 +270,10 @@ def search(request: SearchRequest, response: Response):
         return {
             "results": docs
         }
-    
+
     # Extract and format the results
     results = "\n".join([doc.get("text", "") for doc in docs])
-    
+
     augmented_query = f"Context: {results}\n\nQuestion: {query}\nAnswer:"
     resp = query_ollama(augmented_query)
     if not resp:
@@ -284,17 +294,17 @@ def search(request: SearchRequest, response: Response):
 def query_ollama(prompt):
     """
     Send a query to Ollama and retrieve the response.
-    
+
     Args:
         prompt (str): The input prompt for Ollama.
-    
+
     Returns:
         str: The response from Ollama.
     """
     if not llm:
         raise ValueError("LLM is not initialized / disabled. Please check your configuration.")
-    
     return llm.invoke(prompt)
+
 
 def check_ollama_status():
     """
@@ -370,10 +380,13 @@ if __name__ == '__main__':
     progress_thread = threading.Thread(target=_monitor_scraper_progress)
     progress_thread.daemon = True
     progress_thread.start()
-    
+
     # Initialize the LLM
     if not config.is_llm_disabled():
-        llm = OllamaLLM(model=config.get_config().get("llm_model", "gemma3:12b"))
+        llm = OllamaLLM(
+            model=config.get_config().get("llm_model", "gemma3:12b"))
 
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=config.get_config().get("server_port", 8090))
+    uvicorn.run(app,
+                host="0.0.0.0",
+                port=config.get_config().get("server_port", 8090))
