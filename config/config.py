@@ -106,7 +106,6 @@ def get_config() -> dict:
     Returns:
         dict: A copy of the default configuration dictionary
     """
-    global __default__config
     return __default__config.copy()
 
 
@@ -116,7 +115,6 @@ def update_config(new_config: dict):
     Args:
         new_config (dict): Dictionary containing new configuration settings
     """
-    global __default__config
     __default__config.update(new_config)
     logging.info(f"Configuration updated: {__default__config}")
 

@@ -100,7 +100,6 @@ async def start_scrape(request: ScrapeRequest, response: Response, background_ta
     Returns:
         ScrapeResponse: The response indicating the status of the scraping operation.
     """
-    global scrapers, scheduler
 
     # Lazy initialisation to let config get initialised
     from scrapers import WebsiteScraper
@@ -211,8 +210,6 @@ def scrape_status(response: Response):
         Returns:
             Dict[str, Any]: A dictionary containing the status of each scraper.
     """
-    global scrapers
-    
     scraper_status = {}
     for domain, scraper in scrapers.items():
         scraper_status[domain] = {
@@ -294,7 +291,6 @@ def query_ollama(prompt):
     Returns:
         str: The response from Ollama.
     """
-    global llm
     if not llm:
         raise ValueError("LLM is not initialized / disabled. Please check your configuration.")
     
@@ -354,7 +350,6 @@ def _monitor_scraper_progress():
     """
         Monitor the progress of the web scrapers and log their status
     """
-    global scrapers
     while True:
         for domain, scraper in scrapers.items():
             logger.info(f"Progress for scraper {domain}: {scraper.progress()}")
