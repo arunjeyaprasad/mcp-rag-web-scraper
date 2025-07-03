@@ -76,7 +76,10 @@ Copy past this MCP Server configuration to `/$HOME/Library/Application Support/C
 
 # Snapshots
 Now your Claude desktop shows your service and is ready to hit our RAG Search service
-
+<div>
+<img src="assets/Claude1 - Service.png" alt="Service" width="46%">
+<img src="assets/Claude2 - APIs.png" alt="APIs" width="45%">
+</div>
 
 # License
 This project is licensed under the MIT [License](LICENSE)
