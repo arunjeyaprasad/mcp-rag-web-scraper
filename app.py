@@ -231,7 +231,7 @@ def scrape_status(response: Response):
     return scraper_status
 
 
-@app.get("/search", response_model=Union[ErrorResponse, Dict[str, Any]])
+@app.post("/search", response_model=Union[ErrorResponse, Dict[str, Any]])
 def search(request: SearchRequest, response: Response):
     domain = request.domain
 

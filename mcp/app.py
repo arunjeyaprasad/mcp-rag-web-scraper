@@ -129,7 +129,7 @@ def format_response(response: httpx.Response) -> Dict[str, Any]:
 # MCP Tools
 @mcp.tool()
 async def search(
-    url: str,
+    domain: str,
     query: str,
     timeout: float = DEFAULT_TIMEOUT_SECONDS
 ) -> str:
@@ -137,28 +137,28 @@ async def search(
     Make a GET request to a remote HTTP service.
 
     Args:
-        url: The URL to make the GET request to
+        domain: The URL to make the GET request to
         query: The search query to include in the request
         timeout: Request timeout in seconds (default: 30)
 
     Returns:
         JSON string containing the response data
     """
-    if not is_url_allowed(url):
+    if not is_url_allowed(domain):
         return json.dumps({
             "error": f"URL not allowed. Host must be in: {', '.join(ALLOWED_HOSTS)}"
         })
 
     # Prepare parameters for the GET request
     payload = SearchRequest(
-        domain=urlparse(url).netloc,
+        domain=domain,
         query=query
     )
 
     url = f"{SERVICE_URL}/search"
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
+            response = await client.post(
                 url,
                 json=payload.model_dump(),
                 timeout=timeout

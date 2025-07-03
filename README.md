@@ -44,9 +44,39 @@ You can use conda to create the environment and manage the dependencies
 conda create -n rag-search-service python=3.11
 conda activate rag-search-service
 pip install -r requirements.txt
+python app.py
 ```
 
 <u>Note</u>: Untested on Windows as I don't have access to one. Please update the README with a section for Windows
+
+# Integration with Claude Desktop
+
+Copy past this MCP Server configuration to `/$HOME/Library/Application Support/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "RAGSearchService": {
+      "cwd": "mcp-rag-web-scraper/mcp",
+      "command": "/bin/bash",
+      "args": [
+        "-c",
+        "cd mcp-rag-web-scraper/mcp && pip install -r requirements.txt && python app.py"
+      ],
+      "env": {
+        "PYTHONPATH": "mcp-rag-web-scraper/mcp",
+        "RAG_SERVICE_URL": "http://localhost:8090",
+        "PATH": "/opt/miniconda3/envs/rag/bin/:$PATH"
+      }
+    }
+  }
+}
+```
+<u>Note:</u> Adjust the `cwd`, `args` and `PATH` appropriately based on where the code is cloned in your machine and the python version you intend to use
+
+# Snapshots
+Now your Claude desktop shows your service and is ready to hit our RAG Search service
+
 
 # License
 This project is licensed under the MIT [License](LICENSE)
