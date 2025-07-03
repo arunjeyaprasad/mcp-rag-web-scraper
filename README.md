@@ -11,9 +11,9 @@ This repo contains two indepdendent applications
 
 # Key Features
 <ul>
-<li><b>Customizable Scrape parameters</b>: Refer to [env](.env) file for detailed parameters</li>
+<li><b>Customizable Scrape parameters</b>: Refer to <a href=".env">.env</a> file for detailed parameters</li>
 <li><b>Scheduled Scraping</b>: You can scrape for new content from the target website at the preferred scheduling interval</li>
-<li><b>Override robots.txt</b>: Be sensitive to the websites :) Their job is to be always available to viewers not to serve bots. An ability to override the robots file is provided but still with crawl delay and max pages to not hurt the sentiments of the website</li>
+<li><b>Override robots.txt</b>: Be sensitive to the websites :) Their job is to be always available to viewers, not to serve bots. An ability to override the robots file is provided but still use sensible crawl delay and max pages parameters to not hurt the sentiments of the website</li>
 <li><b>RESTful API</b>: APIs to initiate/stop scraping, progress monitoring and health monitoring</li>
 <li><b>Integration ready</b>: Available for integration with AI Agents or MCP clients like Claude Desktop App</li>
 </ul>
